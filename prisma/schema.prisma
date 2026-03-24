@@ -1,0 +1,83 @@
+// Learn about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                String   @id @default(cuid())
+  email             String   @unique
+  passwordHash      String
+  referralCode      String   @unique
+  referredBy        String?
+  commissionBalance Float    @default(0)
+  totalCommission   Float    @default(0)
+  role              String   @default("user")
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  apiKeys      APIKey[]
+  commissions  Commission[]
+  withdrawals  Withdrawal[]
+}
+
+model APIKey {
+  id          String   @id @default(cuid())
+  userId      String
+  name        String
+  key         String   @unique
+  lastUsed    DateTime?
+  usageCount  Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+model Commission {
+  id        String   @id @default(cuid())
+  userId    String
+  visitorId String?
+  orderId   String?
+  amount    Float    @default(0)
+  rate      Float    @default(0.15)
+  status    String   @default("pending")
+  note      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+model APIProduct {
+  id          String   @id @default(cuid())
+  name        String
+  provider    String
+  modelId     String
+  inputPrice  Float
+  outputPrice Float
+  rpmLimit    Int
+  tpmLimit    Int
+  status      String   @default("available")
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Withdrawal {
+  id          String   @id @default(cuid())
+  userId      String
+  amount      Float
+  account     String
+  accountName String
+  status      String   @default("pending")
+  adminNote   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
+}
